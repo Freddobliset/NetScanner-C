@@ -60,7 +60,7 @@ netscanner/
 
 ## Roadmap (coming soon)
 
-- [ ] DNS Resolution: Add support for hostnames (e.g., google.com) instead of just IP addresses.
+- [X] DNS Resolution: Add support for hostnames (e.g., google.com) instead of just IP addresses.
 
 - [ ] Multithreading: Implement pthreads to scan hundreds of ports simultaneously, drastically reducing scan time.
 

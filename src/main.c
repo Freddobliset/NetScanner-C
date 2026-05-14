@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "scanner.h"
-
+#include "utils.h"
 int main(int argc, char *argv[]) {
     if (argc < 2){
         printf("Usage: %s <IP_ADDRESS>\n", argv[0]);
@@ -9,11 +9,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char *target_ip = argv[1];
+    char target_ip[16];
     int start = atoi(argv[2]);
     int end = atoi(argv[3]);
     char banner[BANNER_SIZE];
     
+
+    //DNS resolution
+    printf("Resolving hostname %s...\n", argv[1]);
+    if (hostname_to_ip(argv[1], target_ip) < 0) {
+        fprintf(stderr, "Failed to resolve hostname.\n");
+        return 1;
+    }
+
     printf("Scanning target : %s ...\n", target_ip);
     printf("%-7s | %-8s | %s\n", "PORT", "STATUS", "SERVICE/BANNER");
     printf("--------------------------------------------------\n");
