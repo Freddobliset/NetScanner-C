@@ -14,7 +14,7 @@ A simple network scanner made using C
 
 Clone the repository and compile the project using 'make'.
 
-### 2. Run it!
+### 2. Run it !
 
 provide the target IP,the starting port, and the ending port.
 
@@ -70,4 +70,8 @@ netscanner/
 
 ## **IMPORTANT**
 
-**This project is for educational purposes. Only use it on networks and devices you own or have explicit permission to test.**
+This tool is developed for **educational and ethical security testing purposes only**. 
+
+The author of this project takes no responsibility for any misuse, damage, or illegal activities conducted with this software. Unauthorized scanning of networks or devices without explicit permission is illegal and unethical. Use this tool only on infrastructure you own or have written consent to test.
+
+**Always follow the rules of engagement and stay within legal boundaries.**
