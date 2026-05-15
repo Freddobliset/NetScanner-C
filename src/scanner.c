@@ -51,3 +51,12 @@ int check_port(const char *ip, int port,char *banner, int banner_size){
     close(sock);
     return PORT_OPEN;
 }
+
+void* scan_worker(void *args) {
+    struct MultiThreadingArgs *mt_args = (struct MultiThreadingArgs *)args; // cast void* to struct pointer
+    int status = check_port(mt_args->ip, mt_args->port, mt_args->banner, mt_args->banner_size);
+    if (status == PORT_OPEN) {
+        printf("%-7d | OPEN     | %s\n", mt_args->port, mt_args->banner);
+    }
+    return NULL;
+}

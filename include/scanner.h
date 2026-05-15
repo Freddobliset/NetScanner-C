@@ -8,4 +8,12 @@
 
 int check_port(const char *ip, int port, char *banner, int banner_size);
 
+struct  MultiThreadingArgs {
+    char ip[16];
+    int port;
+    char banner[BANNER_SIZE];
+    int banner_size;
+};
+void* scan_worker(void *args);
+
 #endif // SCANNER_H
