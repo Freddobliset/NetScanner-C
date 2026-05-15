@@ -62,7 +62,7 @@ netscanner/
 
 - [X] DNS Resolution: Add support for hostnames (e.g., google.com) instead of just IP addresses.
 
-- [ ] Multithreading: Implement pthreads to scan hundreds of ports simultaneously, drastically reducing scan time.
+- [X] Multithreading: Implement pthreads to scan hundreds of ports simultaneously, drastically reducing scan time.
 
 - [ ] CSV Export: Add a flag to save scan results to a file for later analysis.
 

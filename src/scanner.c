@@ -56,7 +56,11 @@ void* scan_worker(void *args) {
     struct MultiThreadingArgs *mt_args = (struct MultiThreadingArgs *)args; // cast void* to struct pointer
     int status = check_port(mt_args->ip, mt_args->port, mt_args->banner, mt_args->banner_size);
     if (status == PORT_OPEN) {
+        mt_args->port_status = true;
         printf("%-7d | OPEN     | %s\n", mt_args->port, mt_args->banner);
+    } else {
+        mt_args->port_status = false;
+        printf("%-7d | CLOSED   | %s\n", mt_args->port, mt_args->banner);
     }
     return NULL;
 }
