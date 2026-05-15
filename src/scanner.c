@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
 
 int check_port(const char *ip, int port,char *banner, int banner_size){
     int sock;
@@ -52,12 +53,65 @@ int check_port(const char *ip, int port,char *banner, int banner_size){
     return PORT_OPEN;
 }
 
+int check_udp_port(const char *ip, int port) {
+    int sock;
+    struct sockaddr_in server;
+    struct timeval tv;
+
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sock < 0) {
+        return PORT_ERROR; 
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
+    memset(&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = inet_addr(ip);
+    server.sin_port = htons(port);
+
+    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        close(sock);
+        return PORT_CLOSED; 
+    }
+    const char *probe = "Hello";
+    if (send(sock, probe, strlen(probe), 0) < 0) {
+        close(sock);
+        return PORT_CLOSED; 
+    }
+    char buffer[1024];
+    int bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+
+    close(sock);
+    if (bytes > 0) {
+        return PORT_OPEN;
+    } else {
+        if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            return PORT_OPEN;
+        }
+        return PORT_CLOSED;
+    }
+}
+
 void* scan_worker(void *args) {
     struct MultiThreadingArgs *mt_args = (struct MultiThreadingArgs *)args; // cast void* to struct pointer
-    int status = check_port(mt_args->ip, mt_args->port, mt_args->banner, mt_args->banner_size);
+    int status;
+    if(mt_args->is_udp){
+        status = check_udp_port(mt_args->ip, mt_args->port);
+    } else {
+        status = check_port(mt_args->ip, mt_args->port, mt_args->banner, mt_args->banner_size);
+    }
+
     if (status == PORT_OPEN) {
         mt_args->port_status = true;
+        if(!mt_args->is_udp && strlen(mt_args->banner) > 0){
         printf("%-7d | OPEN     | %s\n", mt_args->port, mt_args->banner);
+        } else {
+            printf("%-7d | OPEN     | No banner\n", mt_args->port);
+        }
     } else {
         mt_args->port_status = false;
         printf("%-7d | CLOSED   | %s\n", mt_args->port, mt_args->banner);

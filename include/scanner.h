@@ -14,7 +14,9 @@ struct  MultiThreadingArgs {
     char banner[BANNER_SIZE];
     int banner_size;
     bool port_status;
+    bool is_udp;
 };
 void* scan_worker(void *args);
 
+int check_udp_port(const char *ip, int port);
 #endif // SCANNER_H

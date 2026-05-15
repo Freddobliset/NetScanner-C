@@ -2,6 +2,15 @@
 
 A simple network scanner made using C
 
+
+## Features
+
+- **Concurrent Scanning**: Utilizes `pthreads` to scan hundreds of ports in parallel, reducing scan times from minutes to seconds.
+- **TCP Connect & Banner Grabbing**: Reliable detection of open ports with automatic service identification via banner grabbing.
+- **UDP Scanning Support**: Includes a specialized UDP engine that handles ICMP "Destination Unreachable" signals via connected datagram sockets.
+- **CSV Data Export**: Automatically generates `scan_results.csv` with quotation-bounded fields for easy analysis in Excel or Python/Pandas.
+- **DNS Resolution**: Native support for scanning both raw IP addresses and hostnames.
+
 ## Start & Usage
 
 ### "Prerequisites"
@@ -20,6 +29,12 @@ provide the target IP,the starting port, and the ending port.
 
 ```c
 ./bin/netscanner 192.168.1.1 20 100
+```
+### 2.1 Run a UDP Scan
+Scanning UDP requires elevated privileges to intercept ICMP error packets.
+
+```c
+sudo ./bin/netscanner 192.168.1.1 1 100 --udp
 ```
 
 ### 3. Output example
@@ -64,9 +79,17 @@ netscanner/
 
 - [X] Multithreading: Implement pthreads to scan hundreds of ports simultaneously, drastically reducing scan time.
 
-- [ ] CSV Export: Add a flag to save scan results to a file for later analysis.
+- [X] CSV Export: Add a flag to save scan results to a file for later analysis.
 
-- [ ] UDP Support: Expand scanning capabilities to include connectionless UDP protocols.
+- [X] UDP Support: Expand scanning capabilities to include connectionless UDP protocols.
+
+- [ ] Thread Pooling: Implement a fixed-size worker pool to manage resource consumption during massive port ranges (e.g., 65,535 ports).
+
+- [ ] IP Range Scanning: Support CIDR notation (e.g., 192.168.1.0/24) to scan entire networks.
+
+- [ ] OS Fingerprinting: Analyze TCP/IP stack quirks to guess the operating system of the target.
+
+- [ ] JSON Output: Add support for JSON formatting for integration with modern web APIs and tools.
 
 ## **IMPORTANT**
 

@@ -6,15 +6,20 @@
 #include "utils.h"
 int main(int argc, char *argv[]) {
     if (argc < 4){
-        printf("Usage: %s <IP_ADDRESS> <START_PORT> <END_PORT>\n", argv[0]);
-        printf ("Example: %s 192.168.1.1 1 1000\n", argv[0]);
+        printf("Usage: %s <IP_ADDRESS> <START_PORT> <END_PORT> [--udp]\n", argv[0]);
+        printf("Example: %s 192.168.1.1 1 1000\n", argv[0]);
+        printf("Example UDP: %s 192.168.1.1 1 1000 --udp\n", argv[0]);
         return 1;
     }
 
     char target_ip[16];
     int start = atoi(argv[2]);
     int end = atoi(argv[3]);
+    bool use_udp = false;
 
+    if (argc == 5 && strcmp(argv[4], "--udp") == 0) {
+        use_udp = true;    
+    }
     //DNS resolution
     printf("Resolving hostname %s...\n", argv[1]);
     if (hostname_to_ip(argv[1], target_ip) < 0) {
@@ -47,6 +52,7 @@ int main(int argc, char *argv[]) {
         strncpy(mt_args[idx].ip, target_ip, sizeof(mt_args[idx].ip) - 1);
         mt_args[idx].port = p;
         mt_args[idx].banner_size = BANNER_SIZE;
+        mt_args[idx].is_udp = use_udp;
         pthread_create(&threads[idx], NULL, scan_worker, &mt_args[idx]);
     }
         
