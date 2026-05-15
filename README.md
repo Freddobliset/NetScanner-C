@@ -96,5 +96,3 @@ netscanner/
 This tool is developed for **educational and ethical security testing purposes only**. 
 
 The author of this project takes no responsibility for any misuse, damage, or illegal activities conducted with this software. Unauthorized scanning of networks or devices without explicit permission is illegal and unethical. Use this tool only on infrastructure you own or have written consent to test.
-
-**Always follow the rules of engagement and stay within legal boundaries.**
