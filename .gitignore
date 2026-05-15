@@ -1,0 +1,15 @@
+bin/
+netscanner
+
+
+*.o
+src/*.o
+
+
+*.csv
+scan_results.csv
+
+# IDEs and System junk
+.vscode/
+.idea/
+.DS_Store
