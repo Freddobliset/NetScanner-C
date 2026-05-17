@@ -83,7 +83,7 @@ netscanner/
 
 - [X] UDP Support: Expand scanning capabilities to include connectionless UDP protocols.
 
-- [ ] Thread Pooling: Implement a fixed-size worker pool to manage resource consumption during massive port ranges (e.g., 65,535 ports).
+- [X] Thread Pooling: Implement a fixed-size worker pool to manage resource consumption during massive port ranges (e.g., 65,535 ports).
 
 - [ ] IP Range Scanning: Support CIDR notation (e.g., 192.168.1.0/24) to scan entire networks.
 
