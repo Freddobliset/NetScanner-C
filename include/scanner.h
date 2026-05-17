@@ -12,12 +12,20 @@ void* scan_worker(void *args);
 int check_udp_port(const char *ip, int port);
 
 typedef struct {
+    int port;
+    bool is_open;
+    char banner[BANNER_SIZE];
+} PortResult;
+
+typedef struct {
     char target_ip[16];
     int start_port;
     int end_port;
     int current_port;
     bool is_udp;
     pthread_mutex_t *mutex;
+    PortResult *results; // Array to store results for each port
+    int results_count;
 } PortQueue;
 
 typedef struct {

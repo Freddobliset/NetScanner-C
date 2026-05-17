@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdlib.h>
 
 int check_port(const char *ip, int port,char *banner, int banner_size){
     int sock;
@@ -96,7 +97,7 @@ int check_udp_port(const char *ip, int port) {
     }
 }
 
-void* scan_worker(void *args) {
+/* void* scan_worker(void *args) {
     struct MultiThreadingArgs *mt_args = (struct MultiThreadingArgs *)args; // cast void* to struct pointer
     int status;
     if(mt_args->is_udp){
@@ -117,14 +118,14 @@ void* scan_worker(void *args) {
         printf("%-7d | CLOSED   | %s\n", mt_args->port, mt_args->banner);
     }
     return NULL;
-}
+} */
 
 void* ts_worker_pool(void *args) {
-    WorkerArgs *worker_args = (worker_args *)args;
+    WorkerArgs *worker_args = (WorkerArgs *)args;
     PortQueue *queue = worker_args->queue;
     char banner[BANNER_SIZE];
     int status;
-    
+    PortResult res;
     while (1){
         int port_to_scan = -1;
 
@@ -145,7 +146,7 @@ void* ts_worker_pool(void *args) {
             }
         } else {
             banner[0] = '\0';
-            status = check_port(queue->target_ip, port_to_scan, banner, BANNER_SIZE
+            status = check_port(queue->target_ip, port_to_scan, banner, BANNER_SIZE);
             if(status == PORT_OPEN){
                 if(strlen(banner) > 0){
                     printf("%-7d | OPEN     | %s\n", port_to_scan, banner);
@@ -154,6 +155,15 @@ void* ts_worker_pool(void *args) {
                 }
             }
         }
+
+        res.port = port_to_scan;
+        res.is_open = (status == PORT_OPEN);
+        strncpy(res.banner, banner, BANNER_SIZE - 1);
+        res.banner[BANNER_SIZE - 1] = '\0';
+
+        pthread_mutex_lock(queue->mutex);
+        queue->results[queue->results_count++] = res;
+        pthread_mutex_unlock(queue->mutex);
 
     }
     free(worker_args);

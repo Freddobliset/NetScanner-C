@@ -4,6 +4,7 @@
 #include <string.h>
 #include "scanner.h"
 #include "utils.h"
+#define  POOL_SIZE 100
 int main(int argc, char *argv[]) {
     if (argc < 4){
         printf("Usage: %s <IP_ADDRESS> <START_PORT> <END_PORT> [--udp]\n", argv[0]);
@@ -27,64 +28,78 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    pthread_mutex_t my_lock;
+    if (pthread_mutex_init(&my_lock, NULL) != 0) {
+        perror("Mutex init failed");
+        return 1;
+    }
+
     int total_ports = end - start + 1;
-
-    pthread_t *threads = malloc(sizeof(pthread_t) * total_ports);
-    struct MultiThreadingArgs *mt_args = calloc(total_ports, sizeof(struct MultiThreadingArgs));
-
-     if (threads == NULL || mt_args == NULL) {
-        fprintf(stderr, "Memory allocation failed!\n");
+    PortResult *results = malloc(sizeof(PortResult) * total_ports);
+    if (!results) {
+        perror("Failed to allocate memory for results");
         return 1;
     }
 
 
-    if (threads == NULL || mt_args == NULL) {
-        fprintf(stderr, "Memory allocation failed!\n");
+    PortQueue queue;
+    strncpy(queue.target_ip, target_ip, sizeof(queue.target_ip) - 1);
+    queue.start_port = start;
+    queue.end_port = end;
+    queue.current_port = start;
+    queue.is_udp = use_udp;
+    queue.mutex = &my_lock;
+    queue.results = results;
+    queue.results_count = 0;
+    if (pthread_mutex_init(&my_lock, NULL) != 0) {
+        perror("Mutex init failed");
         return 1;
     }
 
-    printf("Scanning target : %s ...\n", target_ip);
-    printf("%-7s | %-8s | %s\n", "PORT", "STATUS", "SERVICE/BANNER");
+    printf("Starting scan on %s from port %d to %d (%s)\n", target_ip, start, end, use_udp ? "UDP" : "TCP");
+    printf("%-7s | %-8s | %s\n", "Port", "Status", "Banner");
     printf("--------------------------------------------------\n");
 
-    for (int p = start; p <= end; p++) {
-        int idx = p - start;
-        strncpy(mt_args[idx].ip, target_ip, sizeof(mt_args[idx].ip) - 1);
-        mt_args[idx].port = p;
-        mt_args[idx].banner_size = BANNER_SIZE;
-        mt_args[idx].is_udp = use_udp;
-        pthread_create(&threads[idx], NULL, scan_worker, &mt_args[idx]);
+    pthread_t pool_threads[POOL_SIZE];
+
+    for (int i = 0; i < POOL_SIZE; i++) {
+        WorkerArgs *worker_args = malloc(sizeof(WorkerArgs));
+        if (worker_args == NULL) {
+            perror("Failed to allocate memory for worker arguments");
+            return 1;
+        }
+        worker_args->queue = &queue;
+
+        if (pthread_create(&pool_threads[i], NULL, ts_worker_pool, worker_args) != 0) {
+            perror("Failed to create thread");
+            return 1;
+        }
     }
-        
-    for (int i = 0; i < total_ports; i++) {
-        pthread_join(threads[i], NULL);
-    }\
+
+    for (int i = 0; i < POOL_SIZE; i++) {
+        pthread_join(pool_threads[i], NULL);
+    }
 
     //CSV output
 
-    FILE *csv_file = fopen("scan_results.csv", "w");
+   FILE *csv_file = fopen("scan_results.csv", "w");
     if (csv_file == NULL) {
         fprintf(stderr, "Could not open file for writing.\n");
         return 1;
     }
     fprintf(csv_file, "Port,Status,Banner\n");
-    for (int i = 0; i < total_ports; i++) {
-        if (mt_args[i].port_status){
-            int len = strlen(mt_args[i].banner);
-            while (len > 0 && (mt_args[i].banner[len - 1] == '\n' || mt_args[i].banner[len - 1] == '\r')) {
-                mt_args[i].banner[--len] = '\0';
-            }
-            fprintf(csv_file, "%d,OPEN,\"%s\"\n", mt_args[i].port, mt_args[i].banner);
-        } else {
-            fprintf(csv_file, "%d,CLOSED,\"%s\"\n", mt_args[i].port, mt_args[i].banner);
-        
+    for (int i = 0; i < queue.results_count; i++) {
+        PortResult *res = &queue.results[i];
+        int len = strlen(res->banner);
+        while (len > 0 && (res->banner[len - 1] == '\n' || res->banner[len - 1] == '\r')) {
+            res->banner[--len] = '\0';
         }
+        fprintf(csv_file, "%d,%s,%s\n", res->port, res->is_open ? "OPEN" : "CLOSED", res->banner);
+
     }
-    fclose(csv_file);
-
-    free(threads);
-    free(mt_args);
-
+    fclose(csv_file); 
+    free(results);
+    pthread_mutex_destroy(&my_lock);
     printf("--------------------------------------------------\n");
     printf("Scan finished.\n");
     return 0;
