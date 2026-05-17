@@ -118,3 +118,44 @@ void* scan_worker(void *args) {
     }
     return NULL;
 }
+
+void* ts_worker_pool(void *args) {
+    WorkerArgs *worker_args = (worker_args *)args;
+    PortQueue *queue = worker_args->queue;
+    char banner[BANNER_SIZE];
+    int status;
+    
+    while (1){
+        int port_to_scan = -1;
+
+        pthread_mutex_lock(queue->mutex);
+
+        if (queue->current_port > queue->end_port) {
+            pthread_mutex_unlock(queue->mutex);
+            break; 
+        }
+        port_to_scan = queue->current_port;
+        queue->current_port++;
+        pthread_mutex_unlock(queue->mutex);
+
+        if(queue->is_udp){
+            status = check_udp_port(queue->target_ip, port_to_scan);
+            if(status == PORT_OPEN){
+                printf("%-7d | OPEN     | No banner\n", port_to_scan);
+            }
+        } else {
+            banner[0] = '\0';
+            status = check_port(queue->target_ip, port_to_scan, banner, BANNER_SIZE
+            if(status == PORT_OPEN){
+                if(strlen(banner) > 0){
+                    printf("%-7d | OPEN     | %s\n", port_to_scan, banner);
+                } else {
+                    printf("%-7d | OPEN     | No banner\n", port_to_scan);
+                }
+            }
+        }
+
+    }
+    free(worker_args);
+    return NULL;
+}
